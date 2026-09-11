@@ -8,4 +8,4 @@ https://websocket.org/guides/heartbeat/
 https://websocket.org/guides/heartbeat/#browser-application-level
 
 ### Server-side pseudocode
-See included Mule XML in this project.
+See included Mule XML in this project, [here](https://github.com/nick-success-stack/mule-websockets-ping-pong-keepalive-pattern/blob/main/mule-websockets-server-keepalive-pattern-response-sample.xml).
