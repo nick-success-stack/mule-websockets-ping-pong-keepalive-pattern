@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="36e2a614-100b-47a6-9858-fb11e487fdd6" >
+		<http:listener-connection host="0.0.0.0" port="8081" readTimeout="900000" connectionIdleTimeout="900000"/>
+	</http:listener-config>
+	<websocket:config name="WebSockets_Config" doc:name="WebSockets Config" doc:id="863dd678-34ef-4153-9f3a-ed61a70c5472" >
+		<websocket:connection >
+			<websocket:server-settings listenerConfig="HTTP_Listener_config" />
+		</websocket:connection>
+	</websocket:config>
+	<flow name="z-websocket-august-2026-timeoutsFlow" doc:id="11f46c72-13b1-4eee-bade-7224bbea6198" >
+		<websocket:on-inbound-connection doc:name="On New Inbound Connection" doc:id="c2f4cb19-cb19-4349-ae90-216415f12700" config-ref="WebSockets_Config" path="/pathval"/>
+		<logger level="INFO" doc:name="Logger" doc:id="00e08f69-a0ce-4b6b-8616-542105d93a79" message="zzz new inbound connection"/>
+	</flow>
+	<flow name="z-websocket-august-2026-timeoutsFlow1" doc:id="1e9b0d92-6b7a-4b5d-9de2-1a9b51fbae8c" >
+		<websocket:inbound-listener doc:name="On New Inbound Message" doc:id="23309924-a180-4571-b9dc-b50a537c117f" config-ref="WebSockets_Config" path="pathval"/>
+		<logger level="INFO" doc:name="Logger" doc:id="a4d0acb8-edf6-4ce2-b252-33bf7c2c8605" message="zzz new inbound message"/>
+		<ee:transform doc:name="transform/cast inbound message from string to json" doc:id="54304253-9af1-491e-8ed0-aa239be1e481">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+read(payload, "application/json")]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<choice doc:name="Choice" doc:id="df67b7da-2975-4ecd-a27c-d0255fcb968f" >
+			<when expression="#[(payload['type'] == 'ping') default false]">
+				<ee:transform doc:name="set 'pong' response payload" doc:id="d5862531-fe3f-46a7-a436-71c11b874102">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+'type': 'pong']]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="a04d1782-94c7-4f29-9bcf-4fcdb960e563" message="about to respond with pong" />
+				<websocket:send doc:name="Send" doc:id="4801edec-e34b-486b-9954-110e05833b6f" config-ref="WebSockets_Config" socketId="#[attributes.socketId]"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="31723da8-ded3-445a-87ba-e5bbe578a39d" message="remainder of app logic"/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
